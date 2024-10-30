@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotEmpty;
@@ -23,6 +24,7 @@ import jakarta.validation.constraints.NotEmpty;
 @Table( name = "usuario" )
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -106,5 +108,6 @@ public class Usuario {
 
     @Transient
     private List<String> permissoes;
+
 
 }
