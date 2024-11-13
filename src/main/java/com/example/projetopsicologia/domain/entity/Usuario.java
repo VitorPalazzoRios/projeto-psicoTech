@@ -100,6 +100,9 @@ public class Usuario {
     @JoinColumn(name = "cod_tema")
     private Tema cod_tema;
 
+    @Column(name = "status")
+    private String status;
+
     @Column(name = "observacao")
     private String observacao;
 

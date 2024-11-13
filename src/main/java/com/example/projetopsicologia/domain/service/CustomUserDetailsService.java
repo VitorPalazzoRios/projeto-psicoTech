@@ -21,13 +21,18 @@ import org.springframework.security.core.userdetails.User;
 @Configuration
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
+    
+    @Autowired
+    private PasswordEncoder encoder;
+    
     @Autowired
     private UsuarioRepository usuarioRepository;
 
     public UserDetails autenticar(Usuario usuario) {
         UserDetails user = loadUserByUsername(usuario.getLogin());
-        
-        if (usuario.getSenha().equals(user.getPassword())) {
+        boolean senhasBatem = encoder.matches( usuario.getSenha(), user.getPassword() );
+
+        if(senhasBatem){
             return user;
         }
         
@@ -49,9 +54,5 @@ public class CustomUserDetailsService implements UserDetailsService {
               
 }
 
-@Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-}
 
 }

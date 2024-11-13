@@ -7,6 +7,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -35,23 +37,29 @@ public class securityConfig {
     }
     
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, 
-                                                   SenhaMasterAtenticationProvider senhaMasterAtenticationProvider, 
-                                                   CustomAuthenticationProvider customAuthenticationProvider, 
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   SenhaMasterAtenticationProvider senhaMasterAtenticationProvider,
+                                                   CustomAuthenticationProvider customAuthenticationProvider,
                                                    CustomFilter customFilter) throws Exception {
-        http.cors(withDefaults()).csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(customizer -> {
-                    customizer.anyRequest().authenticated();
-                })
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Configura sessão sem estado
-                .authenticationProvider(senhaMasterAtenticationProvider)
-                .authenticationProvider(customAuthenticationProvider)
-                .addFilterBefore(new JwtTokenFilter(), UsernamePasswordAuthenticationFilter.class) // Adiciona filtro JWT
-                .addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class); // Adiciona filtro customizado
-
+        http.cors(withDefaults())
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(customizer -> {
+                customizer.requestMatchers("/public/**").permitAll(); // Permite acesso sem autenticação aos endpoints sob /public/
+                customizer.anyRequest().authenticated();
+            })
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Configura sessão sem estado
+            .authenticationProvider(senhaMasterAtenticationProvider)
+            .authenticationProvider(customAuthenticationProvider)
+            .addFilterBefore(new JwtTokenFilter(), UsernamePasswordAuthenticationFilter.class) // Adiciona filtro JWT
+            .addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class); // Adiciona filtro customizado
         return http.build();
     }
+    
 
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
 
    
 }
