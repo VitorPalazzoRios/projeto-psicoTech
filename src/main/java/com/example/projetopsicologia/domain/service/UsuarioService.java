@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -59,12 +58,20 @@ public class UsuarioService {
         return usuario;
     }
 
-    @GetMapping("/{id}")
     public Usuario getUsuarioByLogin(@PathVariable String login) {
         return usuarioRepository.findBylogin(login)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tema não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Login não encontrado"));
     }
 
-	
+    public Usuario getUsuarioById(@PathVariable String id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Login não encontrado"));
+    }
+    
+    public List<Usuario> getUsuarioByTipo(@PathVariable String tipo) {
+        return usuarioRepository.findByTipo(tipo);
+    }
+    
+
     
 }

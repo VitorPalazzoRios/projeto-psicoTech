@@ -14,7 +14,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+
+import com.example.projetopsicologia.domain.service.CustomUserDetailsService;
 import com.example.projetopsicologia.security.JwtTokenFilter;
+import com.example.projetopsicologia.security.JwtTokenProvider;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -23,9 +26,19 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableMethodSecurity(securedEnabled = true)
 
 public class securityConfig {
-        
+
     @Bean
-    public CorsFilter corsFilter() {
+    JwtTokenFilter jwtTokenFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService customUserDetailsService) {
+        return new JwtTokenFilter(jwtTokenProvider, customUserDetailsService);
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() { 
+        return new BCryptPasswordEncoder(); 
+    }
+
+    @Bean
+    CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
@@ -35,31 +48,26 @@ public class securityConfig {
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
     }
-    
+
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   SenhaMasterAtenticationProvider senhaMasterAtenticationProvider,
-                                                   CustomAuthenticationProvider customAuthenticationProvider,
-                                                   CustomFilter customFilter) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                         JwtTokenFilter jwtTokenFilter,
+                                         SenhaMasterAtenticationProvider senhaMasterAtenticationProvider,
+                                         CustomAuthenticationProvider customAuthenticationProvider,
+                                         CustomFilter customFilter) throws Exception {
         http.cors(withDefaults())
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(customizer -> {
-                customizer.requestMatchers("/public/**").permitAll(); // Permite acesso sem autenticação aos endpoints sob /public/
+                customizer.requestMatchers("/public/**").permitAll();
                 customizer.anyRequest().authenticated();
             })
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Configura sessão sem estado
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(senhaMasterAtenticationProvider)
             .authenticationProvider(customAuthenticationProvider)
-            .addFilterBefore(new JwtTokenFilter(), UsernamePasswordAuthenticationFilter.class) // Adiciona filtro JWT
-            .addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class); // Adiciona filtro customizado
+            .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
-    
-
-    @Bean
-    public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
-    }
-
    
 }
